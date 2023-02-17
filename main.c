@@ -126,6 +126,15 @@ void shellsort_sedgewick(int n, elem_t arr[n], int (*cmp)(const void*, const voi
     shellsort(n, arr, cmp, seq_sedgewick);
 }
 
+void shellsort_shell(int n, elem_t arr[n], int (*cmp)(const void*, const void*)) {
+    for (int gap = n / 2; gap >= 1; gap /= 2) {
+        // сортировка вставками каждого из списков
+        for (int i = gap; i < n; ++i)
+            for (int j = i; j >= gap && cmp(&arr[j - gap], &arr[j]) > 0; j -= gap)
+                swap(&arr[j], &arr[j - gap]);
+    }
+}
+
 /* Генерация */
 
 // равномерная генерация случайного double в диапазоне [2^16; 2^17)
@@ -231,6 +240,7 @@ int main(void) {
             run_test(t, "Heapsort", heapsort, n[i], arr, sorted);
             run_test(t, "Shellsort (Stasevich sequence)", shellsort_stasevich, n[i], arr, sorted);
             run_test(t, "Shellsort (Sedgewick sequence)", shellsort_sedgewick, n[i], arr, sorted);
+            run_test(t, "Shellsort (Shell sequence)", shellsort_shell, n[i], arr, sorted);
         }
         putchar('\n');
     }
