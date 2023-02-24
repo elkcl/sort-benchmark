@@ -1,5 +1,8 @@
 // Денисьев Илья, вариант 3 / 2 / 3 / 5
 
+//#define DEBUG
+#define MAIN
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -21,6 +24,40 @@ typedef enum {
 
 // счётчики сравнений и перестановок
 int comp_cnt, swap_cnt;
+
+void print_cmp(elem_t *arr, int j1, int j2) {
+#ifdef DEBUG
+    int n = 7;
+    printf("%d (%d) & ", comp_cnt + 1, swap_cnt);
+    for (int i = 0; i < n - 1; ++i) {
+        if (i == j1 || i == j2)
+            printf("\\cmp{%.1f} & ", arr[i]);
+        else
+            printf("%.1f & ", arr[i]);
+    }
+    if (n - 1 == j1 || n - 1 == j2)
+        printf("\\cmp{%.1f} \\\\ \n", arr[n - 1]);
+    else
+        printf("%.1f \\\\ \n", arr[n - 1]);
+#endif
+}
+
+void print_swap(elem_t *arr, int j1, int j2) {
+#ifdef DEBUG
+    int n = 7;
+    printf("%d (%d) & ", comp_cnt, swap_cnt + 1);
+    for (int i = 0; i < n - 1; ++i) {
+        if (i == j1 || i == j2)
+            printf("\\swap{%.1f} & ", arr[i]);
+        else
+            printf("%.1f & ", arr[i]);
+    }
+    if (n - 1 == j1 || n - 1 == j2)
+        printf("\\swap{%.1f} \\\\ \n", arr[n - 1]);
+    else
+        printf("%.1f \\\\ \n", arr[n - 1]);
+#endif
+}
 
 /* Вспомогательные функции */
 
@@ -64,10 +101,14 @@ void sift_down(int v, int n, elem_t t[n], int (*cmp)(const void*, const void*)) 
         int r = 2 * v + 2;
         int u = l;
         // если правый сын существует и больше левого, выбираем его
+        if (r < n)
+            print_cmp(t, r, l);
         if (r < n && cmp(&t[r], &t[l]) > 0)
             u = r;
+        print_cmp(t, v, u);
         if (cmp(&t[v], &t[u]) >= 0)
             break;
+        print_swap(t, v, u);
         swap(&t[v], &t[u]);
         v = u;
     }
@@ -80,7 +121,8 @@ void heapsort(int n, elem_t arr[n], int (*cmp)(const void*, const void*)) {
         sift_down(i, n, arr, cmp);
     int heap_size = n;
     // вынимаем максимум с верхушки кучи и кладём в массив с конца, пока куча не кончится
-    for (int i = 0; i < n; ++i) {
+    for (int i = 0; i < n - 1; ++i) {
+        print_swap(arr, 0, n - 1 - i);
         swap(&arr[0], &arr[n - 1 - i]);
         --heap_size;
         sift_down(0, heap_size, arr, cmp);
@@ -96,9 +138,15 @@ void shellsort(int n, elem_t arr[n], int (*cmp)(const void*, const void*), int (
     for (int s = sn - 1; s >= 0; --s) {
         int gap = seq(s);
         // сортировка вставками каждого из списков
-        for (int i = gap; i < n; ++i)
-            for (int j = i; j >= gap && cmp(&arr[j - gap], &arr[j]) > 0; j -= gap)
+        for (int i = gap; i < n; ++i) {
+            for (int j = i; j >= gap; j -= gap) {
+                print_cmp(arr, j - gap, j);
+                if (cmp(&arr[j - gap], &arr[j]) <= 0)
+                    break;
+                print_swap(arr, j, j - gap);
                 swap(&arr[j], &arr[j - gap]);
+            }
+        }
     }
 }
 
@@ -220,6 +268,8 @@ int main(void) {
     srand(seed);
     printf("Seed: %jd\n", seed);
 
+#ifdef MAIN
+
     // размеры массивов, на которых будет производиться тестирование
     int n[] = {10, 100, 1000, 10000, 100000};
     int test_count = sizeof(n) / sizeof(n[0]);
@@ -244,7 +294,21 @@ int main(void) {
         }
         putchar('\n');
     }
+
     free(arr);
     free(sorted);
+#endif
+
+#ifdef DEBUG
+    printf("======= DEBUG ARRAY =======\n");
+    // 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0
+    // 2 5 1 4 7 3 6
+    elem_t deb_arr[] = {1.5, 3.0, 1.0, 2.5, 4.0, 2.0, 3.5};
+    elem_t deb_sorted[] = {4.0, 3.5, 3.0, 2.5, 2.0, 1.5, 1.0};
+    printf("--- Heapsort test ---\n");
+    run_test(3, "Heapsort", heapsort, sizeof(deb_arr) / sizeof(elem_t), deb_arr, deb_sorted);
+    printf("--- Shellsort test ---\n");
+    run_test(3, "Shellsort (Sedgewick sequence)", shellsort_sedgewick, sizeof(deb_arr) / sizeof(elem_t), deb_arr, deb_sorted);
+#endif
     return 0;
 }
