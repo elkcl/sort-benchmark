@@ -80,7 +80,7 @@ void heapsort(int n, elem_t arr[n], int (*cmp)(const void*, const void*)) {
         sift_down(i, n, arr, cmp);
     int heap_size = n;
     // вынимаем максимум с верхушки кучи и кладём в массив с конца, пока куча не кончится
-    for (int i = 0; i < n; ++i) {
+    for (int i = 0; i < n - 1; ++i) {
         swap(&arr[0], &arr[n - 1 - i]);
         --heap_size;
         sift_down(0, heap_size, arr, cmp);
